@@ -10,3 +10,4 @@
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.pdb
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/ref/AuthSystem.Core.dll
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.csproj.AssemblyReference.cache
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.sourcelink.json

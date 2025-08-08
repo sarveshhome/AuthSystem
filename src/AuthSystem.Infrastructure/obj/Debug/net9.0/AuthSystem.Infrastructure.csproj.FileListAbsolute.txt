@@ -15,3 +15,4 @@
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Infrastructure/obj/Debug/net9.0/ref/AuthSystem.Infrastructure.dll
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Infrastructure/bin/Debug/net9.0/AuthSystem.Infrastructure.runtimeconfig.json
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Infrastructure/obj/Debug/net9.0/AuthSystem.Infrastructure.genruntimeconfig.cache
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Infrastructure/obj/Debug/net9.0/AuthSystem.Infrastructure.sourcelink.json

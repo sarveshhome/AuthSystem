@@ -1,6 +1,160 @@
 @AuthSystem.Api_HostAddress = http://localhost:5062
+@token = your_access_token_here
+@refreshToken = your_refresh_token_here
 
-GET {{AuthSystem.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register a new user
+POST {{AuthSystem.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password123!"
+}
+
+### Login
+POST {{AuthSystem.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password123!"
+}
+
+### Refresh Token
+POST {{AuthSystem.Api_HostAddress}}/api/auth/refresh-token
+Content-Type: application/json
+
+{
+    "token": "{{token}}",
+    "refreshToken": "{{refreshToken}}"
+}
+
+### Get User Profile (Authenticated)
+GET {{AuthSystem.Api_HostAddress}}/api/auth/profile
+Authorization: Bearer {{token}}
+
+### Update User Profile (Authenticated)
+PUT {{AuthSystem.Api_HostAddress}}/api/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "phoneNumber": "1234567890"
+}
+
+### Change Password (Authenticated)
+PUT {{AuthSystem.Api_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "currentPassword": "Password123!",
+    "newPassword": "NewPassword123!"
+}
+
+### Forgot Password
+POST {{AuthSystem.Api_HostAddress}}/api/auth/forgot-password
+Content-Type: application/json
+
+{
+    "email": "user@example.com"
+}
+
+### Reset Password
+POST {{AuthSystem.Api_HostAddress}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "token": "reset_token_here",
+    "newPassword": "NewPassword123!"
+}
+
+### Logout (Authenticated)
+POST {{AuthSystem.Api_HostAddress}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+### Get All Users (Admin Only)
+GET {{AuthSystem.Api_HostAddress}}/api/admin/users
+Authorization: Bearer {{token}}
+
+### Get User by ID (Admin Only)
+GET {{AuthSystem.Api_HostAddress}}/api/admin/users/{id}
+Authorization: Bearer {{token}}
+
+### Update User Role (Admin Only)
+PUT {{AuthSystem.Api_HostAddress}}/api/admin/users/{id}/role
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "role": "Admin"
+}
+
+### Delete User (Admin Only)
+DELETE {{AuthSystem.Api_HostAddress}}/api/admin/users/{id}
+Authorization: Bearer {{token}}
+
+### Get Current User Info (Authenticated)
+GET {{AuthSystem.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Verify Email
+POST {{AuthSystem.Api_HostAddress}}/api/auth/verify-email
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "token": "verification_token_here"
+}
+
+### Resend Verification Email
+POST {{AuthSystem.Api_HostAddress}}/api/auth/resend-verification
+Content-Type: application/json
+
+{
+    "email": "user@example.com"
+}
+
+### Test Admin-Only Route
+GET {{AuthSystem.Api_HostAddress}}/api/auth/admin-only
+Authorization: Bearer {{token}}
+
+### Test Authenticated-Only Route
+GET {{AuthSystem.Api_HostAddress}}/api/auth/authenticated-only
+Authorization: Bearer {{token}}
+
+### Get User Activity Log (Admin Only)
+GET {{AuthSystem.Api_HostAddress}}/api/admin/users/{id}/activity
+Authorization: Bearer {{token}}
+
+### Update User Status (Admin Only)
+PUT {{AuthSystem.Api_HostAddress}}/api/admin/users/{id}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "isActive": true
+}
+
+### Get System Health
+GET {{AuthSystem.Api_HostAddress}}/api/health
+
+### Get API Version
+GET {{AuthSystem.Api_HostAddress}}/api/version
+
+### Environment Variables for convenience
+# @name login
+POST {{AuthSystem.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password123!"
+}
 
 ###
+@token = {{login.response.body.token}}
+@refreshToken = {{login.response.body.refreshToken}}
