@@ -233,3 +233,10 @@ This README.md provides:
 
 You can customize it further based on your specific implementation and requirements. Let me know if you need any clarification or have specific sections you'd like to add or modify!
 
+
+
+### React
+
+```
+yarn add axios react-router-dom @tanstack/react-query
+```

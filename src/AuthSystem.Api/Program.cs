@@ -28,6 +28,21 @@ var refreshTokenValidityInDays = int.Parse(jwtSettings["RefreshTokenValidityInDa
 
 builder.Services.AddSingleton(new JwtService(secretKey, issuer, tokenValidityInMinutes, refreshTokenValidityInDays));
 
+// Add CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        builder =>
+        {
+            builder
+                .WithOrigins("http://localhost:5173") // Your React app URL
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
+
+
 // Add Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -85,6 +100,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

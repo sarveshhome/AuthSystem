@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthSystem.Application.Services;
 using AuthSystem.Core.Enums; // For Role enum
+using Microsoft.AspNetCore.Cors;
 
 
 namespace AuthSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableCors("AllowReactApp")]
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
