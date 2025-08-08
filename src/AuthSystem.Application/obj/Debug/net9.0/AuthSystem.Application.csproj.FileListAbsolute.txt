@@ -15,3 +15,4 @@
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Application/obj/Debug/net9.0/refint/AuthSystem.Application.dll
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Application/obj/Debug/net9.0/AuthSystem.Application.pdb
 /Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Application/obj/Debug/net9.0/ref/AuthSystem.Application.dll
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Application/obj/Debug/net9.0/AuthSystem.Application.sourcelink.json
