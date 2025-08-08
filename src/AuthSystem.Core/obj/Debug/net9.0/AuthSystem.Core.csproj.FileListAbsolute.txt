@@ -1,0 +1,12 @@
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/bin/Debug/net9.0/AuthSystem.Core.deps.json
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/bin/Debug/net9.0/AuthSystem.Core.dll
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/bin/Debug/net9.0/AuthSystem.Core.pdb
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.AssemblyInfoInputs.cache
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.AssemblyInfo.cs
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.csproj.CoreCompileInputs.cache
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.dll
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/refint/AuthSystem.Core.dll
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.pdb
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/ref/AuthSystem.Core.dll
+/Users/sarveshkumar/Practice/NetCore/AuthSystem/src/AuthSystem.Core/obj/Debug/net9.0/AuthSystem.Core.csproj.AssemblyReference.cache
