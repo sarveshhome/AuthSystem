@@ -88,25 +88,19 @@ Navigate to the web project
 
 cd src/AuthSystem.Web
 
-Copy
 
-Insert at cursor
 bash
 Install dependencies
 
 npm install
 
-Copy
 
-Insert at cursor
 bash
 Start the development server
 
 npm run dev
 
-Copy
 
-Insert at cursor
 bash
 API Endpoints
 Authentication
@@ -114,35 +108,26 @@ POST /api/auth/register - Register new user
 POST /api/auth/login - Login user
 POST /api/auth/refresh-token - Refresh access token
 
-Copy
 
-Insert at cursor
 text
 Protected Routes
 GET /api/auth/authenticated-only - Requires authentication
 GET /api/auth/admin-only - Requires admin role
 
-Copy
 
-Insert at cursor
+
 text
 Testing
 Running Unit Tests
 cd tests/AuthSystem.Application.UnitTests
 dotnet test
 
-Copy
 
-Insert at cursor
-bash
 Running Integration Tests
 cd tests/AuthSystem.Api.IntegrationTests
 dotnet test
 
-Copy
 
-Insert at cursor
-```bash
 
 
 # AuthSystem
