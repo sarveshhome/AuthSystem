@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthSystem.Application.Services;
 using AuthSystem.Core.Enums; // For Role enum
+using Microsoft.AspNetCore.Cors;
 
 
 namespace AuthSystem.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableCors("AllowReactApp")]
+[AllowAnonymous]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -23,6 +26,13 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         var response = await _authService.LoginAsync(loginDto);
+        System.Console.WriteLine(response);
+        if (response == null)
+        {
+            return Unauthorized("Invalid credentials");
+        }
+
+
         return Ok(response);
     }
 
