@@ -35,7 +35,11 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder
-                .WithOrigins("http://localhost:5173") // Your React app URL
+                .WithOrigins("http://localhost:5173",  // React dev server HTTP
+                    "https://localhost:5173", // React dev server HTTPS
+                    "http://localhost:5062",  // API HTTP
+                    "https://localhost:7062"  // API HTTPS") // Your React app URL
+                )
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
@@ -101,7 +105,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors();
+app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -4,7 +4,13 @@ const API_URL = 'http://localhost:5062/api/auth';
 
 export const login = async (email, password) => {
   const response = await axios.post(`${API_URL}/login`,
-   { email, password });
+  JSON.stringify({ email, password }),
+  {
+      headers: { 'Content-Type': 'application/json' },
+      withCredentials: true
+  }
+);
+  console.log(JSON.stringify(response?.data));
   return response.data;
 };
 

@@ -11,7 +11,17 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const success = await login(email, password)
-    if (success) navigate('/')
+    if (error) {
+      alert(error)
+      return
+    }
+    //if (success) navigate('/')
+
+    if (success) {
+      // Redirect to the home page or any other desired page
+      console.log('Login successful, redirecting...')
+      navigate('/home')
+    }
   }
 
   return (
