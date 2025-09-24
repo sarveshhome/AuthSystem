@@ -241,14 +241,16 @@ You can customize it further based on your specific implementation and requireme
 yarn add axios react-router-dom @tanstack/react-query
 ```
 
+
+Build and run with Docker Compose:
+
 ```
-# Build the Docker image
-docker build -t authsystem:latest .
+### Build and start containers
+docker-compose up -d --build
 
-# Run with Docker
-docker run -d -p 5000:80 -p 5001:443 --name authsystem authsystem:latest
+# View logs
+docker-compose logs -f
 
-# Or use Docker Compose
-docker-compose up -d
-
+# Stop containers
+docker-compose down
 ```
