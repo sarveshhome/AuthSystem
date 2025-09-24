@@ -20,7 +20,7 @@ export default function LoginPage() {
     if (success) {
       // Redirect to the home page or any other desired page
       console.log('Login successful, redirecting...')
-      navigate('/home')
+      navigate('/')
     }
   }
 
