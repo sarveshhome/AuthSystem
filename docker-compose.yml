@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/AuthSystem.Api/Dockerfile
+    ports:
+      - "5062:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=AuthSystemDb;User=sa;Password=Strong.Pwd-123;TrustServerCertificate=True
+      - JwtSettings__SecretKey=your-very-secure-long-secret-key-at-least-32-characters
+      - JwtSettings__Issuer=AuthSystem
+      - CORS__Origins=http://localhost:5173,http://localhost:3000
+    networks:
+      - auth-network
+
+  web:
+    build:
+      context: .
+      dockerfile: src/AuthSystem.Web/Dockerfile
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:5062
+    depends_on:
+      - api
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    driver: bridge
