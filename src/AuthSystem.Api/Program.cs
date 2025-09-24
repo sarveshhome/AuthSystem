@@ -7,10 +7,9 @@ using AuthSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity; // Add this
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,26 +44,24 @@ builder.Services.AddSingleton(
     new JwtService(secretKey, issuer, tokenValidityInMinutes, refreshTokenValidityInDays)
 );
 
-// Add CORS configuration
+/// Add CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(
-        "AllowReactApp",
-        builder =>
-        {
-            builder
-                .WithOrigins(
-                    "http://localhost:5173", // React dev server HTTP
-                    "https://localhost:5173", // React dev server HTTPS
-                    "http://localhost:5062", // API HTTP
-                    "https://localhost:7062" // API HTTPS") // Your React app URL
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-        }
-    );
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        // Get CORS origins from configuration
+        var corsOrigins = builder.Configuration["CORS:Origins"]?.Split(',') ?? 
+            builder.Configuration.GetSection("CORS:Origins").Get<string[]>() ?? 
+            Array.Empty<string>();
+
+        policy
+            .WithOrigins(corsOrigins)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
 });
+
 
 // Add Authentication
 builder
