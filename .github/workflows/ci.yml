@@ -46,9 +46,16 @@ jobs:
           node-version: '18'  # adjust if you use a different version
 
       - name: Install dependencies
+        working-directory: src/AuthSystem.Web
         run: |
-          cd src/AuthSystem.Web
-          npm ci
+          echo "Node version: $(node --version || echo 'not installed')"
+          if [ -f package-lock.json ]; then
+            echo "Lockfile found — running npm ci"
+            npm ci
+          else
+            echo "No lockfile — running npm install and generating package-lock.json"
+            npm install
+          fi
 
       - name: Run frontend tests
         run: |
