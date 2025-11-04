@@ -19,13 +19,13 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'  # Changed from 9.0.x since .NET 9 is not yet released
+          dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/AuthSystem.sln  # Corrected the path
+        run: dotnet restore AuthSystem.sln
 
       - name: Build
-        run: dotnet build src/AuthSystem.sln --configuration Release --no-restore
+        run: dotnet build AuthSystem.sln --configuration Release --no-restore
 
       - name: Run unit tests
         run: dotnet test tests/AuthSystem.Application.UnitTests/AuthSystem.Application.UnitTests.csproj --configuration Release --no-build --verbosity normal
@@ -36,9 +36,6 @@ jobs:
   frontend:
     name: Frontend (React/Vite)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/AuthSystem.Web  # Added defaults for working directory
 
     steps:
       - name: Checkout repository
@@ -48,14 +45,59 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'  # Added caching for better performance
-          cache-dependency-path: src/AuthSystem.Web/package-lock.json
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('src/AuthSystem.Web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm ci  # Using npm ci for clean installs in CI environment
+        working-directory: src/AuthSystem.Web
+        run: |
+          if [ -e package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Run frontend tests
+        working-directory: src/AuthSystem.Web
         run: npm test -- --watchAll=false
 
       - name: Build frontend
+        working-directory: src/AuthSystem.Web
         run: npm run build
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: src/AuthSystem.Web/dist
+          retention-days: 7
+
+  validate:
+    name: Validate Build
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: dist
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Frontend build artifacts are missing!"
+            exit 1
+          fi
