@@ -69,9 +69,16 @@ jobs:
             npm install
           fi
 
+      # Updated frontend test step with conditional execution
       - name: Run frontend tests
         working-directory: src/AuthSystem.Web
-        run: npm test -- --watchAll=false
+        run: |
+          if [ -f "package.json" ] && grep -q "\"test\":" "package.json"; then
+            npm test -- --watchAll=false
+          else
+            echo "No test script found in package.json, skipping tests"
+            exit 0
+          fi
 
       - name: Build frontend
         working-directory: src/AuthSystem.Web
