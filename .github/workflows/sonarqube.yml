@@ -7,14 +7,20 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:  # Added to allow manual triggers
 
 env:
   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  SOLUTION_FILE: ./src/AuthSystem.sln  # Added solution file path as environment variable
 
 jobs:
-  build-and-analyze:
+  analyze:
+    name: Build and Analyze
     runs-on: ubuntu-latest
+    
+    # Add condition to prevent running if secrets are not available
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
 
     steps:
       - name: Checkout repository
@@ -25,43 +31,68 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x'  # Using .NET 8
 
-      - name: Install dependencies
-        run: dotnet restore ./AuthSystem.sln
-
-      - name: Build
-        run: dotnet build ./AuthSystem.sln --configuration Release --no-restore
-
-      - name: Run Tests with Code Coverage
-        run: |
-          dotnet test ./tests/AuthSystem.Application.UnitTests/AuthSystem.Application.UnitTests.csproj \
-            --configuration Release \
-            --no-build \
-            /p:CollectCoverage=true \
-            /p:CoverletOutputFormat=opencover \
-            /p:CoverletOutput=./TestResults/coverage/
-
-      - name: Upload coverage report as artifact
-        uses: actions/upload-artifact@v4
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
         with:
-          name: coverage-report
-          path: ./tests/AuthSystem.Application.UnitTests/TestResults/coverage/
+          path: ~\sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      - name: Install SonarScanner for .NET
-        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Cache SonarQube scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: ./.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
 
-      - name: SonarQube Scan Start
+      - name: Install SonarScanner
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-coverage
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+      - name: Begin SonarQube analysis
         run: |
           dotnet sonarscanner begin \
             /k:"AuthSystem" \
             /d:sonar.host.url="${{ env.SONAR_HOST_URL }}" \
             /d:sonar.login="${{ env.SONAR_TOKEN }}" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
-            /d:sonar.coverage.exclusions="**/Migrations/**,**/wwwroot/**"
+            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml \
+            /d:sonar.coverage.exclusions="**/*Tests.cs,**/Migrations/**,**/wwwroot/**,**/Program.cs" \
+            /d:sonar.exclusions="**/Migrations/**,**/wwwroot/**" \
+            /d:sonar.sourceEncoding=UTF-8 \
+            /d:sonar.scm.provider=git
 
-      - name: Rebuild for SonarQube
-        run: dotnet build ./AuthSystem.sln --configuration Release --no-restore
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore
 
-      - name: SonarQube Scan End
+      - name: Test with coverage
+        run: |
+          dotnet-coverage collect "dotnet test ${{ env.SOLUTION_FILE }} --configuration Release --no-build" -f xml -o coverage.xml
+
+      - name: End SonarQube analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ env.SONAR_TOKEN }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: coverage.xml
+          retention-days: 7
+
+      - name: SonarQube Quality Gate check
+        if: always()
+        run: |
+          sleep 5 # Wait for SonarQube to process the results
+          STATUS=$(curl -s -u ${{ env.SONAR_TOKEN }}: "${{ env.SONAR_HOST_URL }}/api/qualitygates/project_status?projectKey=AuthSystem" | jq -r '.projectStatus.status')
+          if [ "$STATUS" = "ERROR" ]; then
+            echo "Quality Gate failed!"
+            exit 1
+          fi
