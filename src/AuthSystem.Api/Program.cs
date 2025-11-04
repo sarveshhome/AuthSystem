@@ -5,6 +5,7 @@ using AuthSystem.Core.Entities;
 using AuthSystem.Infrastructure.Data;
 using AuthSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity; // Add this
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,21 +48,20 @@ builder.Services.AddSingleton(
 /// Add CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
-    {
-        // Get CORS origins from configuration
-        var corsOrigins = builder.Configuration["CORS:Origins"]?.Split(',') ?? 
-            builder.Configuration.GetSection("CORS:Origins").Get<string[]>() ?? 
-            Array.Empty<string>();
+    options.AddPolicy(
+        "AllowReactApp",
+        policy =>
+        {
+            // Get CORS origins from configuration
+            var corsOrigins =
+                builder.Configuration["CORS:Origins"]?.Split(',')
+                ?? builder.Configuration.GetSection("CORS:Origins").Get<string[]>()
+                ?? Array.Empty<string>();
 
-        policy
-            .WithOrigins(corsOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
+            policy.WithOrigins(corsOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
+        }
+    );
 });
-
 
 // Add Authentication
 builder
@@ -152,6 +152,36 @@ app.MapGet(
 
 // Configure endpoints
 app.MapHealthChecks("/health");
+
+// health check for database
+app.MapHealthChecks(
+    "/health/db",
+    new HealthCheckOptions
+    {
+        Predicate = registration => registration.Tags.Contains("DefaultConnection"),
+        ResponseWriter = async (context, report) =>
+        {
+            var result = report.Status == HealthStatus.Healthy ? "Healthy" : "Unhealthy";
+            await context.Response.WriteAsync(result);
+        },
+    }
+);
+
+// health check for kafka
+app.MapHealthChecks(
+    "/health/kafka",
+    new HealthCheckOptions
+    {
+        Predicate = registration => registration.Tags.Contains("kafka"),
+        ResponseWriter = async (context, report) =>
+        {
+            var result = report.Status == HealthStatus.Healthy ? "Healthy" : "Unhealthy";
+            await context.Response.WriteAsync(result);
+        },
+    }
+);
+
+//combine health check db and kafka and api
 
 app.UseAuthentication();
 app.UseAuthorization();
