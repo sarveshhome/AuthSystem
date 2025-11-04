@@ -19,23 +19,27 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x'  # Changed from 9.0.x since .NET 9 is not yet released
 
       - name: Restore dependencies
-        run: cd src/AuthSystem.Api && dotnet restore ../AuthSystem.sln
+        run: dotnet restore src/AuthSystem.sln  # Corrected the path
 
       - name: Build
-        run: dotnet build ../AuthSystem.sln --configuration Release --no-restore
+        run: dotnet build src/AuthSystem.sln --configuration Release --no-restore
 
       - name: Run unit tests
-        run: dotnet test ../tests/AuthSystem.Application.UnitTests --configuration Release --no-build --verbosity normal
+        run: dotnet test tests/AuthSystem.Application.UnitTests/AuthSystem.Application.UnitTests.csproj --configuration Release --no-build --verbosity normal
 
       - name: Run integration tests
-        run: dotnet test ../tests/AuthSystem.Api.IntegrationTests --configuration Release --no-build --verbosity normal
+        run: dotnet test tests/AuthSystem.Api.IntegrationTests/AuthSystem.Api.IntegrationTests.csproj --configuration Release --no-build --verbosity normal
 
   frontend:
     name: Frontend (React/Vite)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/AuthSystem.Web  # Added defaults for working directory
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,27 +47,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'  # adjust if you use a different version
+          node-version: '18'
+          cache: 'npm'  # Added caching for better performance
+          cache-dependency-path: src/AuthSystem.Web/package-lock.json
 
       - name: Install dependencies
-        working-directory: src/AuthSystem.Web
-        run: |
-          echo "Node version: $(node --version || echo 'not installed')"
-          if [ -f package-lock.json ]; then
-            echo "Lockfile found — running npm ci"
-            npm ci
-          else
-            echo "No lockfile — running npm install and generating package-lock.json"
-            npm install
-          fi
+        run: npm ci  # Using npm ci for clean installs in CI environment
 
       - name: Run frontend tests
-        run: |
-          cd src/AuthSystem.Web
-          npm test -- --watchAll=false
+        run: npm test -- --watchAll=false
 
       - name: Build frontend
-        run: |
-          cd src/AuthSystem.Web
-          npm run build
-
+        run: npm run build
