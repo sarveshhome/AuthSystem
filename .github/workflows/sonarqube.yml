@@ -1,0 +1,67 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for SonarQube to get proper history
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install dependencies
+        run: dotnet restore ./AuthSystem.sln
+
+      - name: Build
+        run: dotnet build ./AuthSystem.sln --configuration Release --no-restore
+
+      - name: Run Tests with Code Coverage
+        run: |
+          dotnet test ./tests/AuthSystem.Application.UnitTests/AuthSystem.Application.UnitTests.csproj \
+            --configuration Release \
+            --no-build \
+            /p:CollectCoverage=true \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=./TestResults/coverage/
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./tests/AuthSystem.Application.UnitTests/TestResults/coverage/
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: SonarQube Scan Start
+        run: |
+          dotnet sonarscanner begin \
+            /k:"AuthSystem" \
+            /d:sonar.host.url="${{ env.SONAR_HOST_URL }}" \
+            /d:sonar.login="${{ env.SONAR_TOKEN }}" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="**/Migrations/**,**/wwwroot/**"
+
+      - name: Rebuild for SonarQube
+        run: dotnet build ./AuthSystem.sln --configuration Release --no-restore
+
+      - name: SonarQube Scan End
+        run: dotnet sonarscanner end /d:sonar.login="${{ env.SONAR_TOKEN }}"
