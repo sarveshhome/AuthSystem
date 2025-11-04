@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: cd src/AuthSystem.Api && dotnet restore ../AuthSystem.sln
+
+      - name: Build
+        run: dotnet build ../AuthSystem.sln --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test ../tests/AuthSystem.Application.UnitTests --configuration Release --no-build --verbosity normal
+
+      - name: Run integration tests
+        run: dotnet test ../tests/AuthSystem.Api.IntegrationTests --configuration Release --no-build --verbosity normal
+
+  frontend:
+    name: Frontend (React/Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # adjust if you use a different version
+
+      - name: Install dependencies
+        run: |
+          cd src/AuthSystem.Web
+          npm ci
+
+      - name: Run frontend tests
+        run: |
+          cd src/AuthSystem.Web
+          npm test -- --watchAll=false
+
+      - name: Build frontend
+        run: |
+          cd src/AuthSystem.Web
+          npm run build
+
