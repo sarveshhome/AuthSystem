@@ -1,0 +1,227 @@
+# ---------------------------------------------
+# Name of the workflow
+# ---------------------------------------------
+    name: Continuous Deployment
+
+    # ---------------------------------------------
+    # Workflow Triggers
+    # ---------------------------------------------
+    on:
+      # Trigger automatically when a release is published
+      release:
+        types: [published]
+    
+      # Allow manual triggering with environment selection
+      workflow_dispatch:
+        inputs:
+          environment:
+            description: 'Environment to deploy to'  # Prompt shown when manually triggered
+            required: true
+            type: choice
+            options:
+              - development
+              - staging
+              - production
+    
+    # ---------------------------------------------
+    # Global environment variables used in jobs
+    # ---------------------------------------------
+    env:
+      DOTNET_VERSION: '8.0.x'          # .NET SDK version used in the project
+      API_ARTIFACT: api-release        # Name of API build artifact
+      WEB_ARTIFACT: web-release        # Name of Web build artifact
+    
+    # ---------------------------------------------
+    # JOB 1: Prepare environment for deployment
+    # ---------------------------------------------
+    jobs:
+      prepare:
+        name: Prepare Deployment
+        runs-on: ubuntu-latest
+    
+        # Output variable shared with other jobs
+        outputs:
+          environment: ${{ steps.set-env.outputs.environment }}
+        
+        steps:
+          # Decide which environment to deploy to based on trigger type
+          - name: Set environment
+            id: set-env
+            run: |
+              # Case 1: If manually triggered via workflow_dispatch
+              if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+                echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+    
+              # Case 2: If triggered by a GitHub release
+              elif [ "${{ github.event_name }}" == "release" ]; then
+                # If it's a prerelease, deploy to staging
+                if [[ "${{ github.event.release.prerelease }}" == "true" ]]; then
+                  echo "environment=staging" >> $GITHUB_OUTPUT
+                # Else deploy to production
+                else
+                  echo "environment=production" >> $GITHUB_OUTPUT
+                fi
+              # Default fallback environment
+              else
+                echo "environment=development" >> $GITHUB_OUTPUT
+              fi
+    
+    # ---------------------------------------------
+    # JOB 2: Deploy the API
+    # ---------------------------------------------
+      deploy-api:
+        name: Deploy API
+        needs: prepare                     # Wait until 'prepare' job finishes
+        runs-on: ubuntu-latest
+        environment: ${{ needs.prepare.outputs.environment }}  # Dynamically set environment
+    
+        steps:
+          # Step 1: Checkout repository source code
+          - name: Checkout repository
+            uses: actions/checkout@v4
+    
+          # Step 2: Login to Azure using credentials stored in secrets
+          - name: Login to Azure
+            uses: azure/login@v1
+            with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+          # Step 3: Login to GitHub Container Registry for pulling/pushing Docker images
+          - name: Login to Container Registry
+            uses: docker/login-action@v3
+            with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+    
+          # Step 4: Deploy Docker image to Azure Web App for API
+          - name: Deploy to Azure App Service
+            uses: azure/webapps-deploy@v2
+            with:
+              app-name: ${{ secrets.AZURE_API_APP_NAME }}
+              images: ghcr.io/${{ github.repository }}:${{ github.event.release.tag_name || 'latest' }}
+    
+          # Step 5: Update environment variables (App Settings) in Azure
+          - name: Update API Configuration
+            uses: azure/appservice-settings@v1
+            with:
+              app-name: ${{ secrets.AZURE_API_APP_NAME }}
+              app-settings-json: |
+                [
+                  {
+                    "name": "ASPNETCORE_ENVIRONMENT",
+                    "value": "${{ needs.prepare.outputs.environment }}"
+                  },
+                  {
+                    "name": "ConnectionStrings__DefaultConnection",
+                    "value": "${{ secrets.DB_CONNECTION_STRING }}"
+                  },
+                  {
+                    "name": "JWT__SecretKey",
+                    "value": "${{ secrets.JWT_SECRET_KEY }}"
+                  }
+                ]
+    
+    # ---------------------------------------------
+    # JOB 3: Deploy the Web Application
+    # ---------------------------------------------
+      deploy-web:
+        name: Deploy Web
+        needs: [prepare, deploy-api]       # Run after API deployment
+        runs-on: ubuntu-latest
+        environment: ${{ needs.prepare.outputs.environment }}
+    
+        steps:
+          # Step 1: Checkout source code
+          - name: Checkout repository
+            uses: actions/checkout@v4
+    
+          # Step 2: Download built artifact from previous build job (web release)
+          - name: Download release artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: ${{ env.WEB_ARTIFACT }}
+              path: ./web-dist
+    
+          # Step 3: Login to Azure
+          - name: Login to Azure
+            uses: azure/login@v1
+            with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+          # Step 4: Deploy static web content to Azure Static Web Apps
+          - name: Deploy to Azure Static Web App
+            uses: Azure/static-web-apps-deploy@v1
+            with:
+              azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN }}
+              repo_token: ${{ secrets.GITHUB_TOKEN }}
+              action: "upload"
+              app_location: "./web-dist"
+              skip_app_build: true  # Skip build because artifact already contains built files
+              
+          # Step 5: Update web app configuration (environment variables)
+          - name: Update Web Configuration
+            uses: azure/static-web-apps-deploy@v1
+            with:
+              azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN }}
+              action: "update_app_settings"
+              app_settings: |
+                {
+                  "REACT_APP_API_URL": "${{ secrets.API_URL }}",
+                  "REACT_APP_ENVIRONMENT": "${{ needs.prepare.outputs.environment }}"
+                }
+    
+    # ---------------------------------------------
+    # JOB 4: Health Check (Post Deployment Verification)
+    # ---------------------------------------------
+      health-check:
+        name: Health Check
+        needs: [deploy-api, deploy-web]   # Run after both API and Web deployments
+        runs-on: ubuntu-latest
+        steps:
+          # Step 1: Check API health endpoint
+          - name: Check API Health
+            uses: jtalk/url-health-check-action@v3
+            with:
+              url: ${{ secrets.API_HEALTH_CHECK_URL }}
+              max-attempts: 5
+              retry-delay: 15s
+    
+          # Step 2: Check Web app availability
+          - name: Check Web App
+            uses: jtalk/url-health-check-action@v3
+            with:
+              url: ${{ secrets.WEB_APP_URL }}
+              max-attempts: 5
+              retry-delay: 15s
+    
+    # ---------------------------------------------
+    # JOB 5: Notify via Slack (Always runs)
+    # ---------------------------------------------
+      notify:
+        name: Notify Deployment Status
+        needs: [health-check]
+        runs-on: ubuntu-latest
+        if: always()   # Run whether success or failure
+    
+        steps:
+          # Notify success message to Slack
+          - name: Notify Success
+            if: ${{ success() }}
+            uses: slackapi/slack-github-action@v1.24.0
+            with:
+              channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+              slack-message: "✅ Deployment to ${{ needs.prepare.outputs.environment }} completed successfully!"
+            env:
+              SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    
+          # Notify failure message to Slack
+          - name: Notify Failure
+            if: ${{ failure() }}
+            uses: slackapi/slack-github-action@v1.24.0
+            with:
+              channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+              slack-message: "❌ Deployment to ${{ needs.prepare.outputs.environment }} failed!"
+            env:
+              SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+    
