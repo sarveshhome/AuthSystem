@@ -36,7 +36,6 @@ jobs:
   frontend:
     name: Frontend (React/Vite)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,6 +44,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'src/AuthSystem.Web/package-lock.json'
 
       - name: Get npm cache directory
         id: npm-cache-dir
@@ -63,18 +64,14 @@ jobs:
       - name: Install dependencies
         working-directory: src/AuthSystem.Web
         run: |
-          if [ -e package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          rm -rf node_modules package-lock.json
+          npm install
 
-      # Updated frontend test step with conditional execution
       - name: Run frontend tests
         working-directory: src/AuthSystem.Web
         run: |
           if [ -f "package.json" ] && grep -q "\"test\":" "package.json"; then
-            npm test -- --watchAll=false
+            npm run test:run
           else
             echo "No test script found in package.json, skipping tests"
             exit 0
