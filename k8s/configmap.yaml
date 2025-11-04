@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authsystem-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  CORS__Origins: "http://your-domain.com"
+  ConnectionStrings__DefaultConnection: "Server=mssql-service;Database=AuthDb;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"

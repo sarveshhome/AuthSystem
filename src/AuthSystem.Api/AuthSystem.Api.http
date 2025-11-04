@@ -140,7 +140,15 @@ Content-Type: application/json
 }
 
 ### Get System Health
-GET {{AuthSystem.Api_HostAddress}}/api/health
+GET {{AuthSystem.Api_HostAddress}}/health
+
+### Check Database Health
+GET {{AuthSystem.Api_HostAddress}}/health/db
+Accept: application/json
+
+### Check Kafka Health
+GET {{AuthSystem.Api_HostAddress}}/health/kafka
+Accept: application/json
 
 ### Get API Version
 GET {{AuthSystem.Api_HostAddress}}/api/version
