@@ -2,11 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AuthSystem.Core.Entities;
+using AuthSystem.Core.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthSystem.Infrastructure.Services;
 
-public class JwtService
+public class JwtService : IJwtService
 {
     private readonly string _secretKey;
     private readonly string _issuer;

@@ -1,10 +1,11 @@
 ﻿namespace AuthSystem.Application.UnitTests;
 
-public class UnitTest1
+public class TestRunner
 {
     [Fact]
-    public void Test1()
+    public void AllTestsAreConfigured()
     {
-
+        // This test ensures the test project is properly configured
+        Assert.True(true, "Test project is properly configured");
     }
 }

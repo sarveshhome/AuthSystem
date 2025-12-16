@@ -3,8 +3,8 @@ using System.Security.Claims;
 using AuthSystem.Application.DTOs;
 using AuthSystem.Application.Interfaces;
 using AuthSystem.Core.Entities;
+using AuthSystem.Core.Interfaces;
 using AuthSystem.Infrastructure.Data;
-using AuthSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -13,9 +13,9 @@ namespace AuthSystem.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly AuthDbContext _context;
-    private readonly JwtService _jwtService;
+    private readonly IJwtService _jwtService;
 
-    public AuthService(AuthDbContext context, JwtService jwtService)
+    public AuthService(AuthDbContext context, IJwtService jwtService)
     {
         _context = context;
         _jwtService = jwtService;
@@ -76,7 +76,11 @@ public class AuthService : IAuthService
         if (principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value is not string userId)
             throw new SecurityTokenException("Invalid token");
 
-        var user = await _context.Users.FindAsync(userId);
+        if (!Guid.TryParse(userId, out var userGuid))
+            throw new SecurityTokenException("Invalid token");
+
+        var users = await _context.Users.ToListAsync();
+        var user = users.FirstOrDefault(u => u.Id.ToString() == userId);
 
         if (
             user == null
