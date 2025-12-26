@@ -254,3 +254,33 @@ docker-compose logs -f
 # Stop containers
 docker-compose down
 ```
+
+
+Apply Content-Security-Policy, X-Content-Type-Options, X-Frame-Options ,Strict-Transport-Security in .net core
+
+Referrer-Policy, Permissions-Policy in react application
+
+```
+Security Headers Added:
+Content-Security-Policy (CSP): Prevents XSS attacks by controlling which resources can be loaded
+
+default-src 'self': Only allow resources from same origin
+
+script-src 'self': Only allow scripts from same origin
+
+style-src 'self' 'unsafe-inline': Allow styles from same origin and inline styles
+
+img-src 'self' data:: Allow images from same origin and data URLs
+
+font-src 'self': Only allow fonts from same origin
+
+connect-src 'self': Only allow connections to same origin
+
+frame-ancestors 'none': Prevent embedding in frames
+
+X-Content-Type-Options: nosniff prevents MIME type sniffing attacks
+
+X-Frame-Options: DENY prevents clickjacking by blocking iframe embedding
+
+Strict-Transport-Security (HSTS): Forces HTTPS for 1 year including subdomains
+```

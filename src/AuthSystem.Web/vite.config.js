@@ -15,6 +15,10 @@ export default defineConfig({
         target: process.env.VITE_API_URL || 'http://localhost:5062',
         changeOrigin: true,
       }
+    },
+    headers: {
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
     }
   },
   test: {
