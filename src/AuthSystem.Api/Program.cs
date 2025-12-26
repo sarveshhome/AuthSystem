@@ -2,6 +2,7 @@ using System.Text;
 using AuthSystem.Application.Interfaces;
 using AuthSystem.Application.Services;
 using AuthSystem.Core.Entities;
+using AuthSystem.Core.Interfaces;
 using AuthSystem.Infrastructure.Data;
 using AuthSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -41,7 +42,7 @@ var issuer = jwtSettings["Issuer"];
 var tokenValidityInMinutes = int.Parse(jwtSettings["TokenValidityInMinutes"]);
 var refreshTokenValidityInDays = int.Parse(jwtSettings["RefreshTokenValidityInDays"]);
 
-builder.Services.AddSingleton(
+builder.Services.AddSingleton<IJwtService>(
     new JwtService(secretKey, issuer, tokenValidityInMinutes, refreshTokenValidityInDays)
 );
 
@@ -132,6 +133,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Security Headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';");
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    await next();
+});
 
 app.UseCors("AllowReactApp");
 
